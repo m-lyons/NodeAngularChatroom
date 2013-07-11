@@ -2,25 +2,36 @@
 
 // Declare app level module which depends on filters, and services
 
+//function MessagingController($scope,sharedModel) {
+//    $scope.message = '';
+//    $scope.sendMessage = function(msg) {
+//        //sharedModel.messages.push({message: msg,date: Date.now(),user:$scope.user});
+//        sharedModel.value = msg;
+//        $scope.message = '';
+//    };
+//}
+//
+//MessagingController.$inject = ['$scope','sharedModel'];
+
 angular.module('myApp', [
   'myApp.controllers',
   'myApp.filters',
   'myApp.services',
-  'myApp.directives'
+  'myApp.directives',
+  'ui.bootstrap'
 ]).
 config(function ($routeProvider, $locationProvider) {
-  $routeProvider.
-    when('/view1', {
-      templateUrl: 'partials/partial1',
-      controller: 'MyCtrl1'
-    }).
-    when('/view2', {
-      templateUrl: 'partials/partial2',
-      controller: 'MyCtrl2'
-    }).
+    $routeProvider.
+      when('/app', {
+            templateUrl: 'partials/messageView',
+            controller: 'MessagingController'
+        }).
+
+
     otherwise({
-      redirectTo: '/view1'
+      redirectTo: '/app'
     });
 
   $locationProvider.html5Mode(true);
-});
+})
+

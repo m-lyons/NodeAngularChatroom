@@ -7,3 +7,9 @@ exports.name = function (req, res) {
   	name: 'Bob'
   });
 };
+
+exports.user = function (req, res) {
+    res.json({
+        user: { name: req.user.username, role: req.user.role }
+    });
+};

@@ -1,0 +1,17 @@
+﻿extends layout
+
+block body
+	div.register
+		form(method='post')
+			div
+				div
+					span.lable Username:
+					input(type='text',name='username',id='username')
+				div 
+					span.lable Password:
+					input(type='password',name='password',id='password')
+				div
+					span.lable Confirm Password:
+					input(type='password',name='confirmPassword',id='confirmPassword')
+				div 
+					input.btn(type='submit',value='Register')

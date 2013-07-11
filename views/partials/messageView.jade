@@ -1,0 +1,12 @@
+div#messageViewer
+    p Current ChatRoom: {{sharedModel.chatRooms[root.chatRoom].name}}
+
+    div(ng-repeat='msg in sharedModel.chatRooms[root.chatRoom].messages')
+      div(ng-class="{true:'message mine', false:'message other'}[user==msg.user]")
+        p.messageText {{ msg.message }}
+        //p.userAndDate {{ msg.user }} - {{ msg.date | date:"HH:mm - MMM d, yy" }}
+
+div.messageInput
+  form(ng-submit='sendMessage(message)')
+    input(ng-model='message')
+    input.btn.btn-primary(type='submit',name='Send',value='Send')
