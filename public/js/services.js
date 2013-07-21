@@ -12,9 +12,16 @@ angular.module('myApp.services', []).
 
         var socket = io.connect('http://localhost:3001/');
 
-        socket.on('channel', function(message){
-            set(model, message.path, message.value);
-            set(lastModel, message.path, message.value);
+        socket.on('initialize', function(msg) {
+            model.chatRooms = msg.chatRooms;
+            lastModel = angular.copy(model);
+            $rootScope.sharedModel = model;
+            $rootScope.$apply();
+        });
+
+        socket.on('message', function(msg) {
+            model.chatRooms[msg.chatroom].messages.push(msg.message);
+            lastModel.chatRooms[msg.chatroom].messages.push(msg.message);
             $rootScope.sharedModel = model;
             var objDiv = angular.element('#messages')[0];
             var scrolledHeight = (objDiv.scrollTop + Math.floor($("#right").height() + 100));
@@ -34,43 +41,28 @@ angular.module('myApp.services', []).
             }, (10));
         });
 
-        function syncObject(parent, src, dst) {
-            for(var name in src) {
-                var path = (parent ? parent + '.' : '') + name;
-                if (src[name] === dst[name]) {
-                    // do nothing we are in sync
-                } else if (typeof src[name] == 'object') {
-                    // we are an object, so we need to recurse
-                    syncObject(path, src[name], dst[name] || {});
-                } else {
-                    socket.emit("channel", {path:path, value:src[name]});
-                    dst[name] = angular.copy(src[name]);
-                }
-            }
-        }
+        socket.on('chatroom', function(msg) {
+            model.chatRooms.push({ messages : [], users : [], name : msg.name});
+            lastModel.chatRooms.push({ messages : [], users : [], name : msg.name});
+            $rootScope.sharedModel = model;
+            $rootScope.$apply();
+        });
 
         $rootScope.$watch('sharedModel', function() {
-            syncObject('', model, lastModel);
+          for(var chatroom in model.chatRooms) {
+            for(var msg in model.chatRooms[chatroom].messages) {
+              if (lastModel.chatRooms[chatroom].messages[msg] != undefined && lastModel.chatRooms[chatroom].messages[msg] != null && model.chatRooms[chatroom].messages[msg].message === lastModel.chatRooms[chatroom].messages[msg].message) {
+                // do nothing we are in sync
+               
+              } else {
+                socket.emit("message", { chatroom : chatroom, message : model.chatRooms[chatroom].messages[msg]});
+                lastModel.chatRooms[chatroom].messages[msg] = angular.copy(model.chatRooms[chatroom].messages[msg]);
+              }
+            }
+          }
         }, true);
 
         return model;
 
-
-
-        function set(obj, path, value) {
-            if (!path) return angular.copy(value, obj);
-            var lastObj = obj;
-            var property;
-            angular.forEach(path.split('.'), function(name){
-                if (name) {
-                    lastObj = obj;
-                    obj = obj[property=name];
-                    if (!obj) {
-                        lastObj[property] = obj = {};
-                    }
-                }
-            });
-            lastObj[property] = angular.copy(value);
-        }
     }).
   value('version', '0.1');
