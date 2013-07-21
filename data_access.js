@@ -167,20 +167,21 @@ MessageDao.prototype.findById = function(id,callback) {
 	});
 };
 
-MessageDao.prototype.insertMessage = function(message,chatroomId,callback) {
+MessageDao.prototype.saveMessages = function(messages,callback) {
 	this.getCollection( function(error,collection) {
 		if (error) 
 			callback(error);
 		else {
-			var msg = { message : message, chatroomId : chatroomId};
-			collection.insert(msg, function(error,result) {
-				if (error)
-					callback(error);
-				else
-					callback();
-			})
-		}
-			
+			messages.forEach(function(message) {
+				collection.insert(message, function(error,result) {
+					if (error) { 
+						callback(error);
+						return;
+					}
+				});
+			});
+			callback();
+		}			
 	});
 };
 
@@ -234,9 +235,13 @@ MessageDao.prototype.initialLoad = function(callback) {
 								}
 							}
 							else {
-								collection.find({ chatroomId : chatroom.name }).sort({$natural:-1}).limit(10).toArray(function(error,messages) {
+								collection.find().toArray(function(error,messages) {
+									console.log('foundMessages');
+									console.log(messages.length);
+									console.log(chatRooms.indexOf(chatroom));
 									for (var i = messages.length - 1; i >= 0; i--) {
-										chatroom.messages.push(messages[i].message);
+										if (messages[i].chatroomId == chatRooms.indexOf(chatroom))
+											chatroom.messages.push(messages[i].message);
 									};
 								});
 							}

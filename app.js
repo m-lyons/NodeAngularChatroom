@@ -4,6 +4,7 @@
 
 const DEFAULT_HOST = 'localhost';
 const DEFAULT_PORT = '27017';
+const MESSAGE_BUFFER_SIZE = 0;
 
 /**
  * Module dependencies
@@ -102,6 +103,9 @@ if (app.get('env') === 'production') {
 };
 
 var model = { chatRooms : [] };
+var messageBuffer = [];
+
+
 
 var messageDao = new MessageDao(DEFAULT_HOST,DEFAULT_PORT,function() {
     messageDao.initialLoad(function(error,chatrooms) {
@@ -119,8 +123,15 @@ var messageDao = new MessageDao(DEFAULT_HOST,DEFAULT_PORT,function() {
     });
 }); 
 
-
-
+var saveMessages = function() {
+    console.log('Saving Messages');
+    messageDao.saveMessages(messageBuffer,function(error) {
+        if (error) {
+            return;
+        }
+        messageBuffer = [];
+    });
+}
 
 var clients = [];
 
@@ -163,6 +174,10 @@ io.sockets.on('connection', function(socket){
         console.log(msg);
         //set(model, msg.path, msg.value);
         model.chatRooms[msg.chatroom].messages.push(msg.message);
+        messageBuffer.push({chatroomId:msg.chatroom,message:msg.message});
+        if (messageBuffer.length > MESSAGE_BUFFER_SIZE) {
+            saveMessages();
+        }
         clients.forEach(function(otherClient){
             if (socket !== otherClient){
                 console.log('emitting..');
